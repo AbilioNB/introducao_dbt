@@ -482,3 +482,102 @@ models:
 - **O que faz**: Permite capturar o histórico de mudanças em uma tabela (Slowly Changing Dimensions - SCD Tipo 2).
 - **Comando**: `dbt snapshot` executa a lógica para versionar os dados.
 - **Configuração**: Um arquivo `.sql` define a query e a estratégia para detectar mudanças (`check` ou `timestamp`).
+
+# 📚 5. Documentação no DBT
+
+A documentação é um dos pilares do dbt, permitindo que qualquer pessoa na organização entenda o que os dados significam, como são transformados e qual a sua linhagem.
+
+---
+
+## 🎯 Definição
+
+A documentação no dbt consiste em **metadados** escritos em arquivos `.yml` que descrevem seus recursos, como:
+- **Models**: O que um modelo representa? Qual a sua finalidade?
+- **Columns**: O que cada coluna significa? Qual o seu formato?
+- **Sources**: De onde vêm os dados brutos? Com que frequência são atualizados?
+- **Tests**: Quais garantias de qualidade são aplicadas a um determinado campo?
+
+Ao executar o comando `dbt docs generate`, o dbt compila todo o conteúdo dos seus arquivos `.yml` e `.sql` em um **site estático, interativo e local**, que serve como um dicionário de dados e um mapa do seu pipeline.
+
+---
+
+## ✨ Importância
+
+Manter a documentação junto com o código de transformação traz enormes benefícios:
+
+- **Fonte Única da Verdade (SSOT)**: Centraliza o conhecimento sobre os dados, evitando planilhas e documentos desatualizados.
+- **Data Discovery**: Facilita a descoberta de quais dados estão disponíveis e como podem ser usados para análise.
+- **Confiança e Governança**: Aumenta a confiança nos dados ao expor a lógica de transformação, os testes de qualidade e a linhagem de ponta a ponta.
+- **Colaboração**: Permite que analistas, engenheiros e stakeholders de negócio falem a mesma língua, usando as mesmas definições.
+
+---
+
+## 📍 Localização dos Arquivos
+
+Os arquivos de documentação (`.yml`) são flexíveis, mas a convenção é colocá-los **dentro da pasta `models/`**, próximos aos recursos que eles descrevem.
+
+Por exemplo, para um modelo `stg_pedidos.sql`, o ideal é ter um arquivo `stg_pedidos.yml` na mesma pasta.
+
+**Estrutura de exemplo:**
+```plaintext
+models/
+└── staging/
+    ├── stg_clientes.sql
+    ├── stg_pedidos.sql
+    └── stg_loja.yml  # Documenta todos os modelos e fontes da camada staging
+```
+É possível ter um arquivo `.yml` para cada modelo ou um arquivo que documenta vários modelos e fontes de uma só vez, como no exemplo acima.
+
+---
+
+## 📝 Exemplo Completo
+
+Este exemplo de arquivo `yml` documenta uma fonte (`source`) e um modelo (`model`), incluindo descrições e testes.
+
+📁 `models/staging/stg_ecommerce.yml`:
+```yaml
+version: 2
+
+sources:
+  - name: ecommerce_raw # Nome da fonte, usado em {{ source(...) }}
+    description: "Dados brutos da plataforma de e-commerce."
+    database: raw
+    schema: public
+    tables:
+      - name: pedidos
+        description: "Registra cada pedido feito na plataforma."
+        columns:
+          - name: id
+            description: "Chave primária da tabela de pedidos."
+            tests:
+              - unique
+              - not_null
+
+models:
+  - name: stg_pedidos # Nome do arquivo .sql (sem a extensão)
+    description: "Modelo de staging para pedidos. Limpa e padroniza os dados brutos de pedidos. Uma linha por pedido."
+    columns:
+      - name: id_pedido
+        description: "Chave primária do modelo de pedidos."
+        tests:
+          - unique
+          - not_null
+      - name: status_pedido
+        description: "Status atual do pedido."
+        tests:
+          - accepted_values:
+              values: ['processando', 'enviado', 'entregue', 'cancelado']
+      - name: id_cliente
+        description: "Chave estrangeira para o cliente que fez o pedido."
+        tests:
+          - relationships:
+              to: ref('stg_clientes')
+              field: id_cliente
+```
+
+---
+
+## 🚀 Comandos Essenciais
+
+1.  **`dbt docs generate`**: Compila o site da documentação.
+2.  **`dbt docs serve`**: Inicia um servidor web local para navegar pela documentação gerada.
