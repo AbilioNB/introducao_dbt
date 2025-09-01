@@ -329,176 +329,156 @@ seeds/
 
 # 🗂️ 3. Estrutura de um Projeto DBT
 
-Um projeto DBT segue uma organização padronizada de arquivos e pastas, permitindo modularidade, versionamento e manutenção clara do pipeline de transformações de dados.
+Um projeto DBT é organizado em uma estrutura de pastas e arquivos que promove boas práticas de engenharia de software, como modularidade, reutilização e testabilidade. Abaixo, detalhamos cada componente.
 
 ---
 
-## 📁 Estrutura Geral do Projeto
+## 📂 Estrutura de Pastas Principal
+
+Um projeto DBT típico tem a seguinte aparência:
 
 ```plaintext
-my_dbt_project/
-├── dbt_project.yml
-├── packages.yml
-├── models/
-│   ├── staging/
-│   │   └── ...
-│   ├── intermediate/
-│   │   └── ...
-│   ├── marts/
-│   │   └── ...
-│   └── ...
-├── macros/
-│   └── ...
-├── snapshots/
-│   └── ...
-├── seeds/
-│   └── ...
-├── analyses/
-│   └── ...
-├── tests/
-│   └── ...
-└── target/  
+meu_projeto_dbt/
+├── models/                 # Onde ficam os modelos de transformação (SQL, Python)
+├── seeds/                  # Arquivos CSV com dados estáticos
+├── tests/                  # Testes de dados personalizados (singulares)
+├── macros/                 # Funções reutilizáveis (Jinja + SQL)
+├── snapshots/              # Configuração para capturar mudanças históricas (SCD)
+├── dbt_project.yml         # Arquivo principal de configuração do projeto
 ```
 
-🧾 dbt_project.yml
+---
 
-Arquivo principal de configuração do projeto. Define:
+## 🧾 Arquivos de Configuração
 
-Nome do projeto
+### `dbt_project.yml`
+É o coração do projeto. Este arquivo define:
+- **Nome do projeto** e versão.
+- **Perfil de conexão** a ser usado (do arquivo `profiles.yml`).
+- **Caminhos** onde o DBT deve procurar por cada tipo de recurso (`model-paths`, `seed-paths`, etc.).
+- **Configurações globais** para modelos, como materialização (`table`, `view`, `incremental`).
 
-Caminho para modelos
+**Exemplo:**
+```yaml
+name: 'meu_projeto_dbt'
+version: '1.0.0'
+profile: 'default' # Nome do perfil de conexão
 
-Configurações de materialização (ex: view, table)
+# Define onde cada tipo de recurso está localizado
+model-paths: ["models"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
 
-Versionamento
-
-Pacotes externos
-
-name: my_dbt_project
-version: '1.0'
-profile: default
-
+# Configuração padrão para todos os modelos dentro do projeto
 models:
-  my_dbt_project:
+  meu_projeto_dbt:
+    # Modelos na pasta staging serão materializados como views
     staging:
       materialized: view
+    # Modelos na pasta marts serão materializados como tabelas
     marts:
       materialized: table
+```
 
+### `packages.yml`
+Usado para declarar dependências de pacotes externos, como o `dbt-utils`, que oferece um conjunto de macros úteis.
 
-🔌 Arquivos de Fonte de Banco de Dados (Entrada e Saída)
-📥 Fonte (entrada): sources
+---
 
-Declarados em arquivos .yml dentro da pasta models/, geralmente sob staging/.
+## `models/` – A Camada de Transformação
 
+Esta é a pasta mais importante, onde toda a lógica de transformação de dados reside.
+
+### Organização em Camadas
+Os modelos são organizados em subpastas que representam as camadas do pipeline, conforme visto anteriormente:
+- `models/staging/`: Modelos que fazem a limpeza e padronização inicial dos dados brutos (`sources`). Cada fonte de dados deve ter seu próprio modelo de staging.
+- `models/intermediate/`: Modelos que aplicam lógica de negócio intermediária, como junções (`joins`) e agregações complexas.
+- `models/marts/`: Modelos finais, prontos para consumo por ferramentas de BI ou outras aplicações. Representam entidades de negócio (ex: `dim_clientes`, `fct_pedidos`).
+
+### Arquivos de Modelo (`.sql` e `.py`)
+- **`.sql`**: A grande maioria dos modelos são arquivos SQL. Neles, você usa as funções `{{ ref(...) }}` para criar dependências entre modelos e `{{ source(...) }}` para referenciar dados brutos.
+
+  _Exemplo (`models/staging/stg_pedidos.sql`):_
+  ```sql
+  SELECT
+      id AS id_pedido,
+      id_cliente,
+      status,
+      valor AS valor_total
+  FROM {{ source('loja', 'pedidos') }} -- Referencia a fonte de dados brutos
+  ```
+
+- **`.py`**: Para transformações mais complexas que SQL não suporta bem (requer um data warehouse compatível como Snowflake, Databricks ou BigQuery).
+
+### Arquivos de Propriedades (`.yml`)
+Junto aos modelos, arquivos `.yml` são usados para documentar, adicionar testes e definir configurações específicas.
+
+- **Declaração de `sources`**: Mapeia as tabelas de dados brutos.
+- **Descrição de `models` e colunas**: Adiciona metadados que aparecem na documentação.
+- **Testes genéricos**: Aplica testes pré-definidos (`unique`, `not_null`, `accepted_values`, `relationships`).
+
+_Exemplo (`models/staging/stg_loja.yml`):_
+```yaml
 version: 2
 
 sources:
-  - name: vendas
-    database: raw_db
-    schema: ecommerce
+  - name: loja
+    description: "Dados brutos do e-commerce."
+    database: raw
+    schema: public
     tables:
       - name: pedidos
-        description: Tabela de pedidos da loja virtual
-        columns:
-          - name: id_pedido
-            description: Identificador único
-            tests:
-              - not_null
-              - unique
-
-
-Chamado nos modelos SQL via:
-
-SELECT * FROM {{ source('vendas', 'pedidos') }}
-
-
-📤 Modelos (saída): ref()
-São os modelos transformados, referenciados por ref() para manter dependências claras:
-SELECT * FROM {{ ref('stg_pedidos') }}
-
-
-🧱 Arquivos de Modelo SQL
-
-Localizados dentro de models/, organizados por camada (staging/, intermediate/, marts/, etc.)
-
-Exemplo: models/staging/stg_pedidos.sql
-
-WITH raw AS (
-  SELECT * FROM {{ source('vendas', 'pedidos') }}
-)
-
-SELECT
-  id_pedido,
-  cliente_id,
-  total::float AS valor_total
-FROM raw
-
-
-
-🐍 Arquivos de Modelo Python (dbt v1.3+)
-
-Suporte para transformação com Python está disponível em bancos compatíveis (ex: Databricks, Snowpark, etc.). Para DuckDB, esse suporte é ainda limitado ou experimental.
-
-Exemplo: models/intermediate/agg_pedidos.py
-
-
-def model(dbt, session):
-    df = dbt.ref("stg_pedidos")
-    df_agg = df.groupby("cliente_id").agg({"valor_total": "sum"})
-    return df_agg
-
-
-Observação: ⚠️ Modelos Python exigem engines específicos.
-
-🗒️ Arquivos de Documentação .yml
-
-Localizados junto aos modelos ou fontes, esses arquivos descrevem cada modelo, coluna, teste e relacionamento.
-
-Exemplo: models/staging/stg_pedidos.yml
-
-version: 2
+      - name: clientes
 
 models:
   - name: stg_pedidos
-    description: Modelo staging da tabela de pedidos
+    description: "Modelo de staging para pedidos. Uma linha por pedido."
     columns:
       - name: id_pedido
-        description: Chave primária do pedido
+        description: "Chave primária do pedido."
         tests:
           - unique
           - not_null
-      - name: valor_total
-        description: Total da compra
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['entregue', 'enviado', 'processando', 'cancelado']
+```
 
+---
 
-dbt docs generate
-dbt docs serve
+## Outras Pastas Essenciais
 
+### `seeds/`
+- **O que faz**: Armazena arquivos `.csv` com dados estáticos (ex: tabela de feriados, lista de UFs, categorias de produtos).
+- **Comando**: `dbt seed` carrega esses arquivos como tabelas no seu banco de dados.
+- **Uso**: Podem ser referenciados em modelos usando a função `{{ ref('nome_do_arquivo_seed') }}`.
 
-✅ Checklist por zona de dados
-Zona	Conteúdo	Formato	Arquivos
-staging/	Modelos que limpam e padronizam fontes	.sql, .yml	SQL + YAML
-intermediate/	Modelos intermediários (joins, lógica)	.sql, .py	SQL/Python
-marts/	Modelos finais para análise (KPIs, etc.)	.sql	SQL
-seeds/	Dados estáticos em CSV	.csv	CSV + .yml
-snapshots/	Controle de mudanças em dimensões lentas	.sql, .yml	SQL + YAML
-macros/	Funções reutilizáveis (em Jinja/SQL)	.sql	SQL (Jinja)
+### `tests/`
+- **O que faz**: Contém testes de dados personalizados (chamados de "singulares"), que são consultas SQL que devem retornar zero linhas para o teste passar.
+- **Exemplo (`tests/assert_valor_total_positivo.sql`):**
+  ```sql
+  -- Se esta consulta retornar alguma linha, o teste falha.
+  SELECT
+      id_pedido,
+      valor_total
+  FROM {{ ref('stg_pedidos') }}
+  WHERE valor_total < 0
+  ```
 
+### `macros/`
+- **O que faz**: Define macros em Jinja, que são pedaços de código SQL reutilizáveis. Útil para evitar repetição e padronizar lógica.
+- **Exemplo (`macros/formatar_moeda.sql`):**
+  ```sql
+  {% macro formatar_moeda(coluna) %}
+      ({{ coluna }} / 100)::numeric(16, 2)
+  {% endmacro %}
+  ```
+- **Uso no modelo**: `SELECT {{ formatar_moeda('valor_centavos') }} AS valor_reais FROM ...`
 
-Estrutura completa:
-
-models/
-├── staging/
-│   └── stg_tabela.sql / stg_tabela.yml
-├── intermediate/
-│   └── join_clientes_pedidos.sql
-├── marts/
-│   └── kpi_vendas_mensal.sql
-seeds/
-├── calendario.csv
-├── calendario.yml
-snapshots/
-├── clientes_snapshot.sql
-tests/
-├── test_valor_total_positivo.sql
+### `snapshots/`
+- **O que faz**: Permite capturar o histórico de mudanças em uma tabela (Slowly Changing Dimensions - SCD Tipo 2).
+- **Comando**: `dbt snapshot` executa a lógica para versionar os dados.
+- **Configuração**: Um arquivo `.sql` define a query e a estratégia para detectar mudanças (`check` ou `timestamp`).
