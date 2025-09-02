@@ -583,7 +583,7 @@ models:
 2.  **`dbt docs serve`**: Inicia um servidor web local para navegar pela documentação gerada.
 
 
-# Comandos Mais Frequentes do DBT
+# 📝 6. Comandos Mais Frequentes do DBT
 
 Aqui estão os comandos mais comuns que você usará no seu dia a dia com o dbt Core:
 
