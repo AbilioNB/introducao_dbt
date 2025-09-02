@@ -148,9 +148,6 @@ DBT (Data Build Tool) é uma ferramenta que permite aplicar princípios de engen
 
 O DBT incentiva uma estrutura em **camadas**, baseada em boas práticas de modelagem de dados analíticos:
 
-### 1. **Raw**
-- Dados crus, diretamente da fonte
-- Sem transformações
 
 1. **Staging** (`models/staging/`)  
    - Prepara os dados "atomizados" vindos das fontes (raw), usando **sources**.  
