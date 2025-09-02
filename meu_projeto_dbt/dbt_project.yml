@@ -20,11 +20,10 @@ clean-targets:         # directories to be removed by `dbt clean`
 
 models:
   meu_projeto_dbt:
-
     +materialized: view
     staging:
       +materialized: view
     intermediate:
-      +materialized: view
+      +materialized: table
     mart:
       +materialized: table
