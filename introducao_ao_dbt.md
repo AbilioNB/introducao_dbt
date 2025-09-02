@@ -1,5 +1,7 @@
 # Introdução ao DBT
 
+Desenvolvido por: Abílio Nogueira 
+Fonte princiapl: [Dbt Docs](https://docs.getdbt.com/docs/build/documentation)
 # 🧱 1. Conceitos de uma Stack Moderna para Pipeline de Dados
 
 ---
