@@ -581,3 +581,4 @@ models:
 
 1.  **`dbt docs generate`**: Compila o site da documentação.
 2.  **`dbt docs serve`**: Inicia um servidor web local para navegar pela documentação gerada.
+
