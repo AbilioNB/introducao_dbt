@@ -582,3 +582,33 @@ models:
 1.  **`dbt docs generate`**: Compila o site da documentação.
 2.  **`dbt docs serve`**: Inicia um servidor web local para navegar pela documentação gerada.
 
+
+# Comandos Mais Frequentes do DBT
+
+Aqui estão os comandos mais comuns que você usará no seu dia a dia com o dbt Core:
+
+- **`dbt run`**: Executa todos os modelos na sua pasta `models`. É o comando principal para rodar suas transformações.
+  - **`dbt run --select <nome_do_modelo>`**: Executa um modelo específico.
+  - **`dbt run --select staging`**: Executa todos os modelos em uma pasta.
+  - **`dbt run --full-refresh`**: Força a recriação de modelos incrementais.
+
+- **`dbt test`**: Executa todos os testes de dados definidos no seu projeto (genéricos e singulares).
+  - **`dbt test --select <nome_do_modelo>`**: Testa apenas um modelo específico.
+
+- **`dbt build`**: Um atalho que executa `dbt run`, `dbt test`, `dbt seed` e `dbt snapshot` em uma única etapa, na ordem correta de dependências.
+
+- **`dbt compile`**: Compila o seu código Jinja para SQL puro, sem executá-lo. Útil para depuração.
+
+- **`dbt seed`**: Carrega os arquivos CSV da sua pasta `seeds` como tabelas no seu data warehouse.
+
+- **`dbt snapshot`**: Executa os snapshots para capturar o histórico de mudanças nos seus dados.
+
+- **`dbt docs generate`**: Gera o site de documentação do seu projeto.
+
+- **`dbt docs serve`**: Inicia um servidor web local para visualizar a documentação gerada.
+
+- **`dbt deps`**: Baixa as dependências de pacotes listadas no seu arquivo `packages.yml`.
+
+- **`dbt clean`**: Remove as pastas `target/` e `dbt_packages/`, limpando os artefatos de compilação.
+
+- **`dbt debug`**: Ajuda a diagnosticar problemas de conexão com o seu banco de dados.
