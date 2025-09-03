@@ -64,5 +64,3 @@ Abaixo estão alguns dos comandos mais utilizados no dbt, com uma breve explica�
 
 Esses comandos são essenciais para o ciclo de desenvolvimento, teste e documentação de projetos dbt. Consulte sempre a [documentação oficial do dbt](https://docs.getdbt.com/docs/building-a-dbt-project/command-line-interface) para mais detalhes e opções avançadas.
 
-### Explicação sobre Macros
-O profiles.yml não define um schema, então o dbt usa o padrão do DuckDB (main), resultando em main_staging. Para ter schemas diretos como staging, intermediate e mart, preciso sobrescrever o macro generate_schema_name. Criarei o diretório macros (se não existir) e, dentro dele, o arquivo generate_schema_name.sql com o código que usará o custom_schema_name diretamente, sem prefixos.
