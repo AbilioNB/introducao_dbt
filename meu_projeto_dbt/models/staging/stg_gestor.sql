@@ -18,7 +18,11 @@ with gestor_2019 as (
         "IN_MESTRADO" as in_mestrado,
         "IN_DOUTORADO" as in_doutorado,
         "NU_IDADE" as nu_idade,
-        "NU_IDADE_REFERENCIA" as nu_idade_referencia
+        "NU_IDADE_REFERENCIA" as nu_idade_referencia,
+        "CO_UF" as co_uf,
+        "CO_MUNICIPIO" as co_municipio,
+        "IN_ESPECIALIZACAO" as in_especializacao,
+        "IN_POS_NENHUM" as in_pos_nenhum
     from {{ source('raw', 'gestor_2019') }}
     where "TP_DEPENDENCIA" != 4
 ),
@@ -41,7 +45,11 @@ gestor_2020 as (
         "IN_MESTRADO" as in_mestrado,
         "IN_DOUTORADO" as in_doutorado,
         "NU_IDADE" as nu_idade,
-        "NU_IDADE_REFERENCIA" as nu_idade_referencia
+        "NU_IDADE_REFERENCIA" as nu_idade_referencia,
+        "CO_UF" as co_uf,
+        "CO_MUNICIPIO" as co_municipio,
+        "IN_ESPECIALIZACAO" as in_especializacao,
+        "IN_POS_NENHUM" as in_pos_nenhum
     from {{ source('raw', 'gestor_2020') }}
     where "TP_DEPENDENCIA" != 4
 )
