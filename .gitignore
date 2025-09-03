@@ -209,6 +209,6 @@ __marimo__/
 
 
 bd/
-data_input/
+
 dev.duckdb
 bd.duckdb
