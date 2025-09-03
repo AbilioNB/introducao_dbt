@@ -5,15 +5,17 @@ with dados as (
 ),
 
 gestores_2019 as (
-    select co_escola, id_gestor
+    select co_escola, min(id_gestor) as id_gestor
     from dados
     where nu_ano_censo = 2019
+    group by co_escola
 ),
 
 gestores_2020 as (
-    select co_escola, id_gestor
+    select co_escola, min(id_gestor) as id_gestor
     from dados
     where nu_ano_censo = 2020
+    group by co_escola
 ),
 
 comparacao as (
