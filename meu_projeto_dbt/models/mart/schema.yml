@@ -6,6 +6,8 @@ models:
     columns:
       - name: co_escola
         description: "Código da escola."
+      - name: nome_escola
+        description: "Nome da escola."
       - name: gestor_2019
         description: "ID do gestor da escola em 2019."
         tests:
